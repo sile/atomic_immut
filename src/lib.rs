@@ -1,19 +1,87 @@
+//! Atomic immutable value.
+//!
+//! # Examples
+//!
+//! ```
+//! use std::sync::Arc;
+//! use std::thread;
+//! use atomic_immut::AtomicImmut;
+//!
+//! let v = Arc::new(AtomicImmut::new(vec![0]));
+//! {
+//!     let v = v.clone();
+//!     thread::spawn(move || {
+//!                       let mut new = (&*v.load()).clone(); // Loads the immutable reference
+//!                       new.push(1);
+//!                       v.store(new); // Replaces the existing value
+//!                   });
+//! }
+//! while v.load().len() == 1 {}
+//! assert_eq!(&*v.load(), &vec![0, 1]);
+//! ```
+#![warn(missing_docs)]
 use std::mem;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
 
+/// A thread-safe pointer for immutable value.
+///
+/// This is a thin container. Each `AtomicImmut` instance has an immutable value.
+/// After the `AtomicImmut` instance is created,
+/// it is not possible to modify a part of the contained value.
+/// But you can replace the value entirely with another value.
+///
+/// `AtomicImmut` is useful for sharing rarely updated and
+/// complex (e.g., hashmap) data structures between threads.
+///
+/// # Examples
+///
+/// ```
+/// use std::collections::HashMap;
+/// use std::sync::Arc;
+/// use std::thread;
+/// use atomic_immut::AtomicImmut;
+///
+/// let mut map = HashMap::new();
+/// map.insert("foo", 0);
+///
+/// let v = Arc::new(AtomicImmut::new(map));
+/// {
+///     let v = v.clone();
+///     thread::spawn(move || {
+///                       let mut new = (&*v.load()).clone();
+///                       new.insert("bar", 1);
+///                       v.store(new);
+///                   });
+/// }
+/// while v.load().len() == 1 {}
+/// assert_eq!(v.load().get("foo"), Some(&0));
+/// assert_eq!(v.load().get("bar"), Some(&1));
+/// ```
 #[derive(Debug)]
 pub struct AtomicImmut<T> {
     ptr: AtomicPtr<T>,
     rwlock: SpinRwLock,
 }
 impl<T> AtomicImmut<T> {
+    /// Makes a new `AtomicImmut` instance.
     pub fn new(value: T) -> Self {
         let ptr = AtomicPtr::new(to_arc_ptr(value));
         let rwlock = SpinRwLock::new();
         AtomicImmut { ptr, rwlock }
     }
+
+    /// Loads the value from this pointer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use atomic_immut::AtomicImmut;
+    ///
+    /// let value = AtomicImmut::new(5);
+    /// assert_eq!(*value.load(), 5);
+    /// ```
     pub fn load(&self) -> Arc<T> {
         let _guard = self.rwlock.rlock();
         let ptr = self.ptr.load(Ordering::SeqCst);
@@ -21,9 +89,38 @@ impl<T> AtomicImmut<T> {
         mem::forget(value.clone());
         value
     }
+
+    /// Stores a value into this pointer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use atomic_immut::AtomicImmut;
+    ///
+    /// let value = AtomicImmut::new(5);
+    /// assert_eq!(*value.load(), 5);
+    ///
+    /// value.store(1);
+    /// assert_eq!(*value.load(), 1);
+    /// ```
     pub fn store(&self, value: T) {
         self.swap(value);
     }
+
+    /// Stores a value into this pointer, returning the old value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use atomic_immut::AtomicImmut;
+    ///
+    /// let value = AtomicImmut::new(5);
+    /// assert_eq!(*value.load(), 5);
+    ///
+    /// let old = value.swap(1);
+    /// assert_eq!(*value.load(), 1);
+    /// assert_eq!(*old, 5);
+    /// ```
     pub fn swap(&self, value: T) -> Arc<T> {
         let new = to_arc_ptr(value);
         let old = {
