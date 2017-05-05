@@ -2,5 +2,14 @@
 name = "atomic_immut"
 version = "0.1.0"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
+description = "Atomic immutable value"
+documentation = "https://docs.rs/atomic_immut"
+homepage = "https://github.com/sile/atomic_immut"
+repository = "https://github.com/sile/atomic_immut"
+readme = "README.md"
+keywords = ["atomic"]
+categories = ["concurrency"]
+license = "MIT"
 
-[dependencies]
+[badges]
+travis-ci = {repository = "sile/atomic_immut"}
