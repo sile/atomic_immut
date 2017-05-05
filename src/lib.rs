@@ -98,7 +98,9 @@ fn reader_bits() -> usize {
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
+    use std::sync::{Arc, Barrier};
+    use std::thread;
+    use std::time::Duration;
     use super::*;
 
     #[test]
@@ -113,5 +115,28 @@ mod test {
 
         assert_eq!(&*old, &vec![0, 1, 2]);
         assert_eq!(Arc::strong_count(&old), 1);
+    }
+
+    #[test]
+    fn multithread_test() {
+        let v = Arc::new(AtomicImmut::new(vec![0, 1, 2]));
+        let thread_count = 32;
+        let barrier = Arc::new(Barrier::new(thread_count));
+        for _ in 0..thread_count {
+            let v = v.clone();
+            let barrier = barrier.clone();
+            thread::spawn(move || {
+                              while !v.load().is_empty() {
+                                  thread::sleep(Duration::from_millis(1));
+                              }
+                              barrier.wait();
+                          });
+        }
+        thread::sleep(Duration::from_millis(10));
+
+        v.store(vec![]);
+        barrier.wait();
+        assert!(v.load().is_empty());
+        assert_eq!(Arc::strong_count(&v.load()), 2);
     }
 }
