@@ -110,6 +110,18 @@ impl<T> AtomicImmut<T> {
     /// Updates the value of this pointer by calling `f` on the value to get a new value.
     ///
     /// The function `f` may be called more than once when there is a conflict with other threads.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use atomic_immut::AtomicImmut;
+    ///
+    /// let value = AtomicImmut::new(5);
+    /// assert_eq!(*value.load(), 5);
+    ///
+    /// value.update(|v| *v * 2);
+    /// assert_eq!(*value.load(), 10);
+    /// ```
     pub fn update<F>(&self, f: F)
     where
         F: for<'a> Fn(&'a T) -> T,
