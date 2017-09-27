@@ -107,6 +107,30 @@ impl<T> AtomicImmut<T> {
         self.swap(value);
     }
 
+    /// Updates the value of this pointer by calling `f` on the value to get a new value.
+    ///
+    /// The function `f` may be called more than once when there is a conflict with other threads.
+    pub fn update<F>(&self, f: F)
+    where
+        F: for<'a> Fn(&'a T) -> T,
+    {
+        loop {
+            let old = self.load();
+
+            let new = to_arc_ptr(f(&old));
+            let old = Arc::into_raw(old) as *mut _;
+            unsafe { Arc::from_raw(old) };
+
+            let _guard = self.rwlock.wlock();
+            if self.ptr.compare_and_swap(old, new, Ordering::SeqCst) == old {
+                unsafe { Arc::from_raw(old) };
+                break;
+            } else {
+                unsafe { Arc::from_raw(new) };
+            }
+        }
+    }
+
     /// Stores a value into this pointer, returning the old value.
     ///
     /// # Examples
@@ -224,17 +248,28 @@ mod test {
             let v = v.clone();
             let barrier = barrier.clone();
             thread::spawn(move || {
-                              while !v.load().is_empty() {
-                                  thread::sleep(Duration::from_millis(1));
-                              }
-                              barrier.wait();
-                          });
+                while !v.load().is_empty() {
+                    thread::sleep(Duration::from_millis(1));
+                }
+                barrier.wait();
+            });
         }
         thread::sleep(Duration::from_millis(10));
 
         v.store(vec![]);
         barrier.wait();
         assert!(v.load().is_empty());
+        assert_eq!(Arc::strong_count(&v.load()), 2);
+    }
+
+    #[test]
+    fn update_works() {
+        let v = AtomicImmut::new(vec![0, 1, 2]);
+        assert_eq!(&*v.load(), &vec![0, 1, 2]);
+        assert_eq!(Arc::strong_count(&v.load()), 2);
+
+        v.update(|_| vec![0]);
+        assert_eq!(&*v.load(), &vec![0]);
         assert_eq!(Arc::strong_count(&v.load()), 2);
     }
 }
