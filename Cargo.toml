@@ -1,6 +1,6 @@
 [package]
 name = "atomic_immut"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
 description = "Atomic immutable value"
 homepage = "https://github.com/sile/atomic_immut"
