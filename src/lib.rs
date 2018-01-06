@@ -86,7 +86,7 @@ impl<T> AtomicImmut<T> {
         let _guard = self.rwlock.rlock();
         let ptr = self.ptr.load(Ordering::SeqCst);
         let value = unsafe { Arc::from_raw(ptr) };
-        mem::forget(value.clone());
+        mem::forget(Arc::clone(&value));
         value
     }
 

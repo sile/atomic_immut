@@ -35,8 +35,8 @@ fn multi_thread_load(b: &mut Bencher) {
     let thread_count = 8;
     let barrier = Arc::new(Barrier::new(thread_count));
     for _ in 0..thread_count {
-        let v = v.clone();
-        let barrier = barrier.clone();
+        let v = Arc::clone(&v);
+        let barrier = Arc::clone(&barrier);
         thread::spawn(move || {
             while !v.load().is_empty() {}
             barrier.wait();
@@ -57,8 +57,8 @@ fn multi_thread_load_std(b: &mut Bencher) {
     let thread_count = 8;
     let barrier = Arc::new(Barrier::new(thread_count));
     for _ in 0..thread_count {
-        let v = v.clone();
-        let barrier = barrier.clone();
+        let v = Arc::clone(&v);
+        let barrier = Arc::clone(&barrier);
         thread::spawn(move || {
             while !v.load().is_empty() {}
             barrier.wait();
@@ -80,9 +80,9 @@ fn multi_thread_store_and_load(b: &mut Bencher) {
     let thread_count = 4;
     let barrier = Arc::new(Barrier::new(thread_count));
     for _ in 0..thread_count {
-        let v0 = v0.clone();
-        let v1 = v1.clone();
-        let barrier = barrier.clone();
+        let v0 = Arc::clone(&v0);
+        let v1 = Arc::clone(&v1);
+        let barrier = Arc::clone(&barrier);
         thread::spawn(move || {
             while !v0.load().is_empty() {
                 v1.store(1);
@@ -109,9 +109,9 @@ fn multi_thread_store_and_load_std(b: &mut Bencher) {
     let thread_count = 4;
     let barrier = Arc::new(Barrier::new(thread_count));
     for _ in 0..thread_count {
-        let v0 = v0.clone();
-        let v1 = v1.clone();
-        let barrier = barrier.clone();
+        let v0 = Arc::clone(&v0);
+        let v1 = Arc::clone(&v1);
+        let barrier = Arc::clone(&barrier);
         thread::spawn(move || {
             while !v0.load().is_empty() {
                 v1.store(1);

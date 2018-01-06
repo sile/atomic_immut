@@ -17,7 +17,7 @@ impl<T> StdAtomicImmut<T> {
         let ptr = self.rwlock.read().unwrap();
         let raw = ptr.load(Ordering::SeqCst);
         let value = unsafe { Arc::from_raw(raw) };
-        mem::forget(value.clone());
+        mem::forget(Arc::clone(&value));
         value
     }
     pub fn store(&self, value: T) {
