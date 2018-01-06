@@ -16,13 +16,17 @@ mod std_atomic_immut;
 #[bench]
 fn single_thread_load(b: &mut Bencher) {
     let v = AtomicImmut::new(vec![0, 1, 2]);
-    b.iter(|| { test::black_box(v.load()); });
+    b.iter(|| {
+        test::black_box(v.load());
+    });
 }
 
 #[bench]
 fn single_thread_load_std(b: &mut Bencher) {
     let v = StdAtomicImmut::new(vec![0, 1, 2]);
-    b.iter(|| { test::black_box(v.load()); });
+    b.iter(|| {
+        test::black_box(v.load());
+    });
 }
 
 #[bench]
@@ -34,12 +38,14 @@ fn multi_thread_load(b: &mut Bencher) {
         let v = v.clone();
         let barrier = barrier.clone();
         thread::spawn(move || {
-                          while !v.load().is_empty() {}
-                          barrier.wait();
-                      });
+            while !v.load().is_empty() {}
+            barrier.wait();
+        });
     }
     thread::sleep(Duration::from_millis(10));
-    b.iter(|| { test::black_box(v.load()); });
+    b.iter(|| {
+        test::black_box(v.load());
+    });
     v.store(vec![]);
     barrier.wait();
     assert_eq!(Arc::strong_count(&v.load()), 2);
@@ -54,12 +60,14 @@ fn multi_thread_load_std(b: &mut Bencher) {
         let v = v.clone();
         let barrier = barrier.clone();
         thread::spawn(move || {
-                          while !v.load().is_empty() {}
-                          barrier.wait();
-                      });
+            while !v.load().is_empty() {}
+            barrier.wait();
+        });
     }
     thread::sleep(Duration::from_millis(10));
-    b.iter(|| { test::black_box(v.load()); });
+    b.iter(|| {
+        test::black_box(v.load());
+    });
     v.store(vec![]);
     barrier.wait();
     assert_eq!(Arc::strong_count(&v.load()), 2);
@@ -76,17 +84,17 @@ fn multi_thread_store_and_load(b: &mut Bencher) {
         let v1 = v1.clone();
         let barrier = barrier.clone();
         thread::spawn(move || {
-                          while !v0.load().is_empty() {
-                              v1.store(1);
-                          }
-                          barrier.wait();
-                      });
+            while !v0.load().is_empty() {
+                v1.store(1);
+            }
+            barrier.wait();
+        });
     }
     thread::sleep(Duration::from_millis(10));
     b.iter(|| {
-               test::black_box(v0.load());
-               test::black_box(v1.load());
-           });
+        test::black_box(v0.load());
+        test::black_box(v1.load());
+    });
     v0.store(vec![]);
     barrier.wait();
     assert_eq!(Arc::strong_count(&v0.load()), 2);
@@ -105,17 +113,17 @@ fn multi_thread_store_and_load_std(b: &mut Bencher) {
         let v1 = v1.clone();
         let barrier = barrier.clone();
         thread::spawn(move || {
-                          while !v0.load().is_empty() {
-                              v1.store(1);
-                          }
-                          barrier.wait();
-                      });
+            while !v0.load().is_empty() {
+                v1.store(1);
+            }
+            barrier.wait();
+        });
     }
     thread::sleep(Duration::from_millis(10));
     b.iter(|| {
-               test::black_box(v0.load());
-               test::black_box(v1.load());
-           });
+        test::black_box(v0.load());
+        test::black_box(v1.load());
+    });
     v0.store(vec![]);
     barrier.wait();
     assert_eq!(Arc::strong_count(&v0.load()), 2);
