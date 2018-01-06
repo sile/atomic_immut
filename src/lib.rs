@@ -166,8 +166,8 @@ impl<T> AtomicImmut<T> {
         unsafe { Arc::from_raw(old) }
     }
 }
-unsafe impl<T: Send> Send for AtomicImmut<T> {}
-unsafe impl<T: Send> Sync for AtomicImmut<T> {}
+unsafe impl<T: Send + Sync> Send for AtomicImmut<T> {}
+unsafe impl<T: Send + Sync> Sync for AtomicImmut<T> {}
 impl<T> Drop for AtomicImmut<T> {
     fn drop(&mut self) {
         let ptr = mem::replace(self.ptr.get_mut(), ptr::null_mut());
