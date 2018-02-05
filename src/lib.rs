@@ -174,6 +174,11 @@ impl<T> Drop for AtomicImmut<T> {
         let _ = unsafe { Arc::from_raw(ptr) };
     }
 }
+impl<T: Default> Default for AtomicImmut<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
 
 #[derive(Debug)]
 struct SpinRwLock(AtomicUsize);
