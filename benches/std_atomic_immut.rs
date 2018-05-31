@@ -1,7 +1,7 @@
 use std::mem;
 use std::ptr;
-use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug)]
 pub struct StdAtomicImmut<T> {

@@ -22,8 +22,8 @@
 #![warn(missing_docs)]
 use std::mem;
 use std::ptr;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
+use std::sync::Arc;
 
 /// A thread-safe pointer for immutable value.
 ///
@@ -237,10 +237,10 @@ fn reader_bits() -> usize {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use std::sync::{Arc, Barrier};
     use std::thread;
     use std::time::Duration;
-    use super::*;
 
     #[test]
     fn it_works() {

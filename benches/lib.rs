@@ -3,10 +3,10 @@
 extern crate atomic_immut;
 extern crate test;
 
+use atomic_immut::AtomicImmut;
 use std::sync::{Arc, Barrier};
 use std::thread;
 use std::time::Duration;
-use atomic_immut::AtomicImmut;
 use test::Bencher;
 
 use std_atomic_immut::StdAtomicImmut;
